@@ -5,8 +5,6 @@
 abstract final class RoutePaths {
   static const String dashboard = '/dashboard';
   static const String subjects = '/subjects';
-  static const String timetable = '/timetable';
-  static const String calendar = '/calendar';
   static const String settings = '/settings';
 }
 
@@ -14,7 +12,5 @@ abstract final class RoutePaths {
 abstract final class RouteNames {
   static const String dashboard = 'dashboard';
   static const String subjects = 'subjects';
-  static const String timetable = 'timetable';
-  static const String calendar = 'calendar';
   static const String settings = 'settings';
 }

@@ -1,15 +1,13 @@
 import 'package:go_router/go_router.dart';
 import 'package:lectra/core/constants/route_paths.dart';
-import 'package:lectra/features/calendar/screen.dart';
 import 'package:lectra/features/dashboard/screen.dart';
 import 'package:lectra/features/settings/screen.dart';
 import 'package:lectra/features/subjects/screen.dart';
-import 'package:lectra/features/timetable/screen.dart';
 import 'package:lectra/shared/widgets/main_scaffold.dart';
 
 /// Application-wide navigation configuration.
 ///
-/// A single [StatefulShellRoute.indexedStack] hosts the five bottom
+/// A single [StatefulShellRoute.indexedStack] hosts the three bottom
 /// navigation destinations, each with its own independent navigator
 /// so per-tab state survives tab switches.
 abstract final class AppRouter {
@@ -36,24 +34,6 @@ abstract final class AppRouter {
                 path: RoutePaths.subjects,
                 name: RouteNames.subjects,
                 builder: (context, state) => const SubjectsScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: RoutePaths.timetable,
-                name: RouteNames.timetable,
-                builder: (context, state) => const TimetableScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: RoutePaths.calendar,
-                name: RouteNames.calendar,
-                builder: (context, state) => const CalendarScreen(),
               ),
             ],
           ),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Persistent bottom-navigation scaffold shared by the five top level
-/// destinations.
+/// Persistent bottom-navigation scaffold shared by the three top
+/// level destinations.
 ///
 /// Used as the builder for a [StatefulShellRoute.indexedStack], so
 /// each branch keeps its own navigation stack and state alive when
@@ -22,16 +22,6 @@ class MainScaffold extends StatelessWidget {
       icon: Icon(Icons.menu_book_outlined),
       selectedIcon: Icon(Icons.menu_book),
       label: 'Subjects',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.schedule_outlined),
-      selectedIcon: Icon(Icons.schedule),
-      label: 'Timetable',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.calendar_month_outlined),
-      selectedIcon: Icon(Icons.calendar_month),
-      label: 'Calendar',
     ),
     NavigationDestination(
       icon: Icon(Icons.settings_outlined),
