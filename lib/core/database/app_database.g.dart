@@ -24,22 +24,40 @@ class $SubjectsTable extends Subjects with TableInfo<$SubjectsTable, Subject> {
       additionalChecks:
           GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 100),
       type: DriftSqlType.string,
-      requiredDuringInsert: true);
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
   static const VerificationMeta _codeMeta = const VerificationMeta('code');
   @override
   late final GeneratedColumn<String> code = GeneratedColumn<String>(
-      'code', aliasedName, false,
+      'code', aliasedName, true,
       additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 0, maxTextLength: 20),
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 20),
       type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(''));
-  static const VerificationMeta _colorValueMeta =
-      const VerificationMeta('colorValue');
+      requiredDuringInsert: false);
+  static const VerificationMeta _nicknameMeta =
+      const VerificationMeta('nickname');
   @override
-  late final GeneratedColumn<int> colorValue = GeneratedColumn<int>(
-      'color_value', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
+  late final GeneratedColumn<String> nickname = GeneratedColumn<String>(
+      'nickname', aliasedName, true,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 30),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _facultyNameMeta =
+      const VerificationMeta('facultyName');
+  @override
+  late final GeneratedColumn<String> facultyName = GeneratedColumn<String>(
+      'faculty_name', aliasedName, true,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 100),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _accentColorMeta =
+      const VerificationMeta('accentColor');
+  @override
+  late final GeneratedColumn<int> accentColor = GeneratedColumn<int>(
+      'accent_color', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -49,7 +67,8 @@ class $SubjectsTable extends Subjects with TableInfo<$SubjectsTable, Subject> {
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
   @override
-  List<GeneratedColumn> get $columns => [id, name, code, colorValue, createdAt];
+  List<GeneratedColumn> get $columns =>
+      [id, name, code, nickname, facultyName, accentColor, createdAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -73,11 +92,23 @@ class $SubjectsTable extends Subjects with TableInfo<$SubjectsTable, Subject> {
       context.handle(
           _codeMeta, code.isAcceptableOrUnknown(data['code']!, _codeMeta));
     }
-    if (data.containsKey('color_value')) {
+    if (data.containsKey('nickname')) {
+      context.handle(_nicknameMeta,
+          nickname.isAcceptableOrUnknown(data['nickname']!, _nicknameMeta));
+    }
+    if (data.containsKey('faculty_name')) {
       context.handle(
-          _colorValueMeta,
-          colorValue.isAcceptableOrUnknown(
-              data['color_value']!, _colorValueMeta));
+          _facultyNameMeta,
+          facultyName.isAcceptableOrUnknown(
+              data['faculty_name']!, _facultyNameMeta));
+    }
+    if (data.containsKey('accent_color')) {
+      context.handle(
+          _accentColorMeta,
+          accentColor.isAcceptableOrUnknown(
+              data['accent_color']!, _accentColorMeta));
+    } else if (isInserting) {
+      context.missing(_accentColorMeta);
     }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
@@ -97,9 +128,13 @@ class $SubjectsTable extends Subjects with TableInfo<$SubjectsTable, Subject> {
       name: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       code: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}code'])!,
-      colorValue: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}color_value']),
+          .read(DriftSqlType.string, data['${effectivePrefix}code']),
+      nickname: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}nickname']),
+      facultyName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}faculty_name']),
+      accentColor: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}accent_color'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
@@ -113,25 +148,45 @@ class $SubjectsTable extends Subjects with TableInfo<$SubjectsTable, Subject> {
 
 class Subject extends DataClass implements Insertable<Subject> {
   final int id;
+
+  /// Official subject name.
   final String name;
-  final String code;
-  final int? colorValue;
+
+  /// Optional course code.
+  final String? code;
+
+  /// Optional nickname used in compact UI.
+  final String? nickname;
+
+  /// Faculty / professor name.
+  final String? facultyName;
+
+  /// Material color used throughout the application.
+  final int accentColor;
   final DateTime createdAt;
   const Subject(
       {required this.id,
       required this.name,
-      required this.code,
-      this.colorValue,
+      this.code,
+      this.nickname,
+      this.facultyName,
+      required this.accentColor,
       required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
-    map['code'] = Variable<String>(code);
-    if (!nullToAbsent || colorValue != null) {
-      map['color_value'] = Variable<int>(colorValue);
+    if (!nullToAbsent || code != null) {
+      map['code'] = Variable<String>(code);
     }
+    if (!nullToAbsent || nickname != null) {
+      map['nickname'] = Variable<String>(nickname);
+    }
+    if (!nullToAbsent || facultyName != null) {
+      map['faculty_name'] = Variable<String>(facultyName);
+    }
+    map['accent_color'] = Variable<int>(accentColor);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -140,10 +195,14 @@ class Subject extends DataClass implements Insertable<Subject> {
     return SubjectsCompanion(
       id: Value(id),
       name: Value(name),
-      code: Value(code),
-      colorValue: colorValue == null && nullToAbsent
+      code: code == null && nullToAbsent ? const Value.absent() : Value(code),
+      nickname: nickname == null && nullToAbsent
           ? const Value.absent()
-          : Value(colorValue),
+          : Value(nickname),
+      facultyName: facultyName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(facultyName),
+      accentColor: Value(accentColor),
       createdAt: Value(createdAt),
     );
   }
@@ -154,8 +213,10 @@ class Subject extends DataClass implements Insertable<Subject> {
     return Subject(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
-      code: serializer.fromJson<String>(json['code']),
-      colorValue: serializer.fromJson<int?>(json['colorValue']),
+      code: serializer.fromJson<String?>(json['code']),
+      nickname: serializer.fromJson<String?>(json['nickname']),
+      facultyName: serializer.fromJson<String?>(json['facultyName']),
+      accentColor: serializer.fromJson<int>(json['accentColor']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -165,8 +226,10 @@ class Subject extends DataClass implements Insertable<Subject> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
-      'code': serializer.toJson<String>(code),
-      'colorValue': serializer.toJson<int?>(colorValue),
+      'code': serializer.toJson<String?>(code),
+      'nickname': serializer.toJson<String?>(nickname),
+      'facultyName': serializer.toJson<String?>(facultyName),
+      'accentColor': serializer.toJson<int>(accentColor),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -174,14 +237,18 @@ class Subject extends DataClass implements Insertable<Subject> {
   Subject copyWith(
           {int? id,
           String? name,
-          String? code,
-          Value<int?> colorValue = const Value.absent(),
+          Value<String?> code = const Value.absent(),
+          Value<String?> nickname = const Value.absent(),
+          Value<String?> facultyName = const Value.absent(),
+          int? accentColor,
           DateTime? createdAt}) =>
       Subject(
         id: id ?? this.id,
         name: name ?? this.name,
-        code: code ?? this.code,
-        colorValue: colorValue.present ? colorValue.value : this.colorValue,
+        code: code.present ? code.value : this.code,
+        nickname: nickname.present ? nickname.value : this.nickname,
+        facultyName: facultyName.present ? facultyName.value : this.facultyName,
+        accentColor: accentColor ?? this.accentColor,
         createdAt: createdAt ?? this.createdAt,
       );
   Subject copyWithCompanion(SubjectsCompanion data) {
@@ -189,8 +256,11 @@ class Subject extends DataClass implements Insertable<Subject> {
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       code: data.code.present ? data.code.value : this.code,
-      colorValue:
-          data.colorValue.present ? data.colorValue.value : this.colorValue,
+      nickname: data.nickname.present ? data.nickname.value : this.nickname,
+      facultyName:
+          data.facultyName.present ? data.facultyName.value : this.facultyName,
+      accentColor:
+          data.accentColor.present ? data.accentColor.value : this.accentColor,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -201,14 +271,17 @@ class Subject extends DataClass implements Insertable<Subject> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('code: $code, ')
-          ..write('colorValue: $colorValue, ')
+          ..write('nickname: $nickname, ')
+          ..write('facultyName: $facultyName, ')
+          ..write('accentColor: $accentColor, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, code, colorValue, createdAt);
+  int get hashCode => Object.hash(
+      id, name, code, nickname, facultyName, accentColor, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -216,42 +289,55 @@ class Subject extends DataClass implements Insertable<Subject> {
           other.id == this.id &&
           other.name == this.name &&
           other.code == this.code &&
-          other.colorValue == this.colorValue &&
+          other.nickname == this.nickname &&
+          other.facultyName == this.facultyName &&
+          other.accentColor == this.accentColor &&
           other.createdAt == this.createdAt);
 }
 
 class SubjectsCompanion extends UpdateCompanion<Subject> {
   final Value<int> id;
   final Value<String> name;
-  final Value<String> code;
-  final Value<int?> colorValue;
+  final Value<String?> code;
+  final Value<String?> nickname;
+  final Value<String?> facultyName;
+  final Value<int> accentColor;
   final Value<DateTime> createdAt;
   const SubjectsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.code = const Value.absent(),
-    this.colorValue = const Value.absent(),
+    this.nickname = const Value.absent(),
+    this.facultyName = const Value.absent(),
+    this.accentColor = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   SubjectsCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     this.code = const Value.absent(),
-    this.colorValue = const Value.absent(),
+    this.nickname = const Value.absent(),
+    this.facultyName = const Value.absent(),
+    required int accentColor,
     this.createdAt = const Value.absent(),
-  }) : name = Value(name);
+  })  : name = Value(name),
+        accentColor = Value(accentColor);
   static Insertable<Subject> custom({
     Expression<int>? id,
     Expression<String>? name,
     Expression<String>? code,
-    Expression<int>? colorValue,
+    Expression<String>? nickname,
+    Expression<String>? facultyName,
+    Expression<int>? accentColor,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (code != null) 'code': code,
-      if (colorValue != null) 'color_value': colorValue,
+      if (nickname != null) 'nickname': nickname,
+      if (facultyName != null) 'faculty_name': facultyName,
+      if (accentColor != null) 'accent_color': accentColor,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -259,14 +345,18 @@ class SubjectsCompanion extends UpdateCompanion<Subject> {
   SubjectsCompanion copyWith(
       {Value<int>? id,
       Value<String>? name,
-      Value<String>? code,
-      Value<int?>? colorValue,
+      Value<String?>? code,
+      Value<String?>? nickname,
+      Value<String?>? facultyName,
+      Value<int>? accentColor,
       Value<DateTime>? createdAt}) {
     return SubjectsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       code: code ?? this.code,
-      colorValue: colorValue ?? this.colorValue,
+      nickname: nickname ?? this.nickname,
+      facultyName: facultyName ?? this.facultyName,
+      accentColor: accentColor ?? this.accentColor,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -283,8 +373,14 @@ class SubjectsCompanion extends UpdateCompanion<Subject> {
     if (code.present) {
       map['code'] = Variable<String>(code.value);
     }
-    if (colorValue.present) {
-      map['color_value'] = Variable<int>(colorValue.value);
+    if (nickname.present) {
+      map['nickname'] = Variable<String>(nickname.value);
+    }
+    if (facultyName.present) {
+      map['faculty_name'] = Variable<String>(facultyName.value);
+    }
+    if (accentColor.present) {
+      map['accent_color'] = Variable<int>(accentColor.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -298,19 +394,21 @@ class SubjectsCompanion extends UpdateCompanion<Subject> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('code: $code, ')
-          ..write('colorValue: $colorValue, ')
+          ..write('nickname: $nickname, ')
+          ..write('facultyName: $facultyName, ')
+          ..write('accentColor: $accentColor, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 }
 
-class $TimetableEntriesTable extends TimetableEntries
-    with TableInfo<$TimetableEntriesTable, TimetableEntry> {
+class $WeeklyLectureSlotsTable extends WeeklyLectureSlots
+    with TableInfo<$WeeklyLectureSlotsTable, WeeklyLectureSlot> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $TimetableEntriesTable(this.attachedDatabase, [this._alias]);
+  $WeeklyLectureSlotsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -361,9 +459,9 @@ class $TimetableEntriesTable extends TimetableEntries
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'timetable_entries';
+  static const String $name = 'weekly_lecture_slots';
   @override
-  VerificationContext validateIntegrity(Insertable<TimetableEntry> instance,
+  VerificationContext validateIntegrity(Insertable<WeeklyLectureSlot> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -410,9 +508,9 @@ class $TimetableEntriesTable extends TimetableEntries
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  TimetableEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+  WeeklyLectureSlot map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return TimetableEntry(
+    return WeeklyLectureSlot(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       subjectId: attachedDatabase.typeMapping
@@ -429,19 +527,26 @@ class $TimetableEntriesTable extends TimetableEntries
   }
 
   @override
-  $TimetableEntriesTable createAlias(String alias) {
-    return $TimetableEntriesTable(attachedDatabase, alias);
+  $WeeklyLectureSlotsTable createAlias(String alias) {
+    return $WeeklyLectureSlotsTable(attachedDatabase, alias);
   }
 }
 
-class TimetableEntry extends DataClass implements Insertable<TimetableEntry> {
+class WeeklyLectureSlot extends DataClass
+    implements Insertable<WeeklyLectureSlot> {
   final int id;
   final int subjectId;
+
+  /// Monday = 1 ... Sunday = 7
   final int dayOfWeek;
+
+  /// Minutes since midnight.
   final int startMinutes;
+
+  /// Minutes since midnight.
   final int endMinutes;
   final String room;
-  const TimetableEntry(
+  const WeeklyLectureSlot(
       {required this.id,
       required this.subjectId,
       required this.dayOfWeek,
@@ -460,8 +565,8 @@ class TimetableEntry extends DataClass implements Insertable<TimetableEntry> {
     return map;
   }
 
-  TimetableEntriesCompanion toCompanion(bool nullToAbsent) {
-    return TimetableEntriesCompanion(
+  WeeklyLectureSlotsCompanion toCompanion(bool nullToAbsent) {
+    return WeeklyLectureSlotsCompanion(
       id: Value(id),
       subjectId: Value(subjectId),
       dayOfWeek: Value(dayOfWeek),
@@ -471,10 +576,10 @@ class TimetableEntry extends DataClass implements Insertable<TimetableEntry> {
     );
   }
 
-  factory TimetableEntry.fromJson(Map<String, dynamic> json,
+  factory WeeklyLectureSlot.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return TimetableEntry(
+    return WeeklyLectureSlot(
       id: serializer.fromJson<int>(json['id']),
       subjectId: serializer.fromJson<int>(json['subjectId']),
       dayOfWeek: serializer.fromJson<int>(json['dayOfWeek']),
@@ -496,14 +601,14 @@ class TimetableEntry extends DataClass implements Insertable<TimetableEntry> {
     };
   }
 
-  TimetableEntry copyWith(
+  WeeklyLectureSlot copyWith(
           {int? id,
           int? subjectId,
           int? dayOfWeek,
           int? startMinutes,
           int? endMinutes,
           String? room}) =>
-      TimetableEntry(
+      WeeklyLectureSlot(
         id: id ?? this.id,
         subjectId: subjectId ?? this.subjectId,
         dayOfWeek: dayOfWeek ?? this.dayOfWeek,
@@ -511,8 +616,8 @@ class TimetableEntry extends DataClass implements Insertable<TimetableEntry> {
         endMinutes: endMinutes ?? this.endMinutes,
         room: room ?? this.room,
       );
-  TimetableEntry copyWithCompanion(TimetableEntriesCompanion data) {
-    return TimetableEntry(
+  WeeklyLectureSlot copyWithCompanion(WeeklyLectureSlotsCompanion data) {
+    return WeeklyLectureSlot(
       id: data.id.present ? data.id.value : this.id,
       subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
       dayOfWeek: data.dayOfWeek.present ? data.dayOfWeek.value : this.dayOfWeek,
@@ -527,7 +632,7 @@ class TimetableEntry extends DataClass implements Insertable<TimetableEntry> {
 
   @override
   String toString() {
-    return (StringBuffer('TimetableEntry(')
+    return (StringBuffer('WeeklyLectureSlot(')
           ..write('id: $id, ')
           ..write('subjectId: $subjectId, ')
           ..write('dayOfWeek: $dayOfWeek, ')
@@ -544,7 +649,7 @@ class TimetableEntry extends DataClass implements Insertable<TimetableEntry> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is TimetableEntry &&
+      (other is WeeklyLectureSlot &&
           other.id == this.id &&
           other.subjectId == this.subjectId &&
           other.dayOfWeek == this.dayOfWeek &&
@@ -553,14 +658,14 @@ class TimetableEntry extends DataClass implements Insertable<TimetableEntry> {
           other.room == this.room);
 }
 
-class TimetableEntriesCompanion extends UpdateCompanion<TimetableEntry> {
+class WeeklyLectureSlotsCompanion extends UpdateCompanion<WeeklyLectureSlot> {
   final Value<int> id;
   final Value<int> subjectId;
   final Value<int> dayOfWeek;
   final Value<int> startMinutes;
   final Value<int> endMinutes;
   final Value<String> room;
-  const TimetableEntriesCompanion({
+  const WeeklyLectureSlotsCompanion({
     this.id = const Value.absent(),
     this.subjectId = const Value.absent(),
     this.dayOfWeek = const Value.absent(),
@@ -568,7 +673,7 @@ class TimetableEntriesCompanion extends UpdateCompanion<TimetableEntry> {
     this.endMinutes = const Value.absent(),
     this.room = const Value.absent(),
   });
-  TimetableEntriesCompanion.insert({
+  WeeklyLectureSlotsCompanion.insert({
     this.id = const Value.absent(),
     required int subjectId,
     required int dayOfWeek,
@@ -579,7 +684,7 @@ class TimetableEntriesCompanion extends UpdateCompanion<TimetableEntry> {
         dayOfWeek = Value(dayOfWeek),
         startMinutes = Value(startMinutes),
         endMinutes = Value(endMinutes);
-  static Insertable<TimetableEntry> custom({
+  static Insertable<WeeklyLectureSlot> custom({
     Expression<int>? id,
     Expression<int>? subjectId,
     Expression<int>? dayOfWeek,
@@ -597,14 +702,14 @@ class TimetableEntriesCompanion extends UpdateCompanion<TimetableEntry> {
     });
   }
 
-  TimetableEntriesCompanion copyWith(
+  WeeklyLectureSlotsCompanion copyWith(
       {Value<int>? id,
       Value<int>? subjectId,
       Value<int>? dayOfWeek,
       Value<int>? startMinutes,
       Value<int>? endMinutes,
       Value<String>? room}) {
-    return TimetableEntriesCompanion(
+    return WeeklyLectureSlotsCompanion(
       id: id ?? this.id,
       subjectId: subjectId ?? this.subjectId,
       dayOfWeek: dayOfWeek ?? this.dayOfWeek,
@@ -640,7 +745,7 @@ class TimetableEntriesCompanion extends UpdateCompanion<TimetableEntry> {
 
   @override
   String toString() {
-    return (StringBuffer('TimetableEntriesCompanion(')
+    return (StringBuffer('WeeklyLectureSlotsCompanion(')
           ..write('id: $id, ')
           ..write('subjectId: $subjectId, ')
           ..write('dayOfWeek: $dayOfWeek, ')
@@ -652,12 +757,12 @@ class TimetableEntriesCompanion extends UpdateCompanion<TimetableEntry> {
   }
 }
 
-class $CalendarEventsTable extends CalendarEvents
-    with TableInfo<$CalendarEventsTable, CalendarEvent> {
+class $AttendanceRecordsTable extends AttendanceRecords
+    with TableInfo<$AttendanceRecordsTable, AttendanceRecord> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $CalendarEventsTable(this.attachedDatabase, [this._alias]);
+  $AttendanceRecordsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -667,58 +772,47 @@ class $CalendarEventsTable extends CalendarEvents
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  static const VerificationMeta _subjectIdMeta =
+      const VerificationMeta('subjectId');
   @override
-  late final GeneratedColumn<String> title = GeneratedColumn<String>(
-      'title', aliasedName, false,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 150),
-      type: DriftSqlType.string,
-      requiredDuringInsert: true);
+  late final GeneratedColumn<int> subjectId = GeneratedColumn<int>(
+      'subject_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES subjects (id) ON DELETE CASCADE'));
   static const VerificationMeta _dateMeta = const VerificationMeta('date');
   @override
   late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
       'date', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
-  static const VerificationMeta _descriptionMeta =
-      const VerificationMeta('description');
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
-  late final GeneratedColumn<String> description = GeneratedColumn<String>(
-      'description', aliasedName, false,
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
       type: DriftSqlType.string,
       requiredDuringInsert: false,
-      defaultValue: const Constant(''));
-  static const VerificationMeta _isHolidayMeta =
-      const VerificationMeta('isHoliday');
+      defaultValue: const Constant('present'));
   @override
-  late final GeneratedColumn<bool> isHoliday = GeneratedColumn<bool>(
-      'is_holiday', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_holiday" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  @override
-  List<GeneratedColumn> get $columns =>
-      [id, title, date, description, isHoliday];
+  List<GeneratedColumn> get $columns => [id, subjectId, date, status];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'calendar_events';
+  static const String $name = 'attendance_records';
   @override
-  VerificationContext validateIntegrity(Insertable<CalendarEvent> instance,
+  VerificationContext validateIntegrity(Insertable<AttendanceRecord> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('title')) {
-      context.handle(
-          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    if (data.containsKey('subject_id')) {
+      context.handle(_subjectIdMeta,
+          subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta));
     } else if (isInserting) {
-      context.missing(_titleMeta);
+      context.missing(_subjectIdMeta);
     }
     if (data.containsKey('date')) {
       context.handle(
@@ -726,15 +820,9 @@ class $CalendarEventsTable extends CalendarEvents
     } else if (isInserting) {
       context.missing(_dateMeta);
     }
-    if (data.containsKey('description')) {
-      context.handle(
-          _descriptionMeta,
-          description.isAcceptableOrUnknown(
-              data['description']!, _descriptionMeta));
-    }
-    if (data.containsKey('is_holiday')) {
-      context.handle(_isHolidayMeta,
-          isHoliday.isAcceptableOrUnknown(data['is_holiday']!, _isHolidayMeta));
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
     }
     return context;
   }
@@ -742,70 +830,64 @@ class $CalendarEventsTable extends CalendarEvents
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  CalendarEvent map(Map<String, dynamic> data, {String? tablePrefix}) {
+  AttendanceRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return CalendarEvent(
+    return AttendanceRecord(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      title: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      subjectId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}subject_id'])!,
       date: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
-      description: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
-      isHoliday: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_holiday'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
     );
   }
 
   @override
-  $CalendarEventsTable createAlias(String alias) {
-    return $CalendarEventsTable(attachedDatabase, alias);
+  $AttendanceRecordsTable createAlias(String alias) {
+    return $AttendanceRecordsTable(attachedDatabase, alias);
   }
 }
 
-class CalendarEvent extends DataClass implements Insertable<CalendarEvent> {
+class AttendanceRecord extends DataClass
+    implements Insertable<AttendanceRecord> {
   final int id;
-  final String title;
+  final int subjectId;
   final DateTime date;
-  final String description;
-  final bool isHoliday;
-  const CalendarEvent(
+  final String status;
+  const AttendanceRecord(
       {required this.id,
-      required this.title,
+      required this.subjectId,
       required this.date,
-      required this.description,
-      required this.isHoliday});
+      required this.status});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
-    map['title'] = Variable<String>(title);
+    map['subject_id'] = Variable<int>(subjectId);
     map['date'] = Variable<DateTime>(date);
-    map['description'] = Variable<String>(description);
-    map['is_holiday'] = Variable<bool>(isHoliday);
+    map['status'] = Variable<String>(status);
     return map;
   }
 
-  CalendarEventsCompanion toCompanion(bool nullToAbsent) {
-    return CalendarEventsCompanion(
+  AttendanceRecordsCompanion toCompanion(bool nullToAbsent) {
+    return AttendanceRecordsCompanion(
       id: Value(id),
-      title: Value(title),
+      subjectId: Value(subjectId),
       date: Value(date),
-      description: Value(description),
-      isHoliday: Value(isHoliday),
+      status: Value(status),
     );
   }
 
-  factory CalendarEvent.fromJson(Map<String, dynamic> json,
+  factory AttendanceRecord.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return CalendarEvent(
+    return AttendanceRecord(
       id: serializer.fromJson<int>(json['id']),
-      title: serializer.fromJson<String>(json['title']),
+      subjectId: serializer.fromJson<int>(json['subjectId']),
       date: serializer.fromJson<DateTime>(json['date']),
-      description: serializer.fromJson<String>(json['description']),
-      isHoliday: serializer.fromJson<bool>(json['isHoliday']),
+      status: serializer.fromJson<String>(json['status']),
     );
   }
   @override
@@ -813,111 +895,94 @@ class CalendarEvent extends DataClass implements Insertable<CalendarEvent> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'title': serializer.toJson<String>(title),
+      'subjectId': serializer.toJson<int>(subjectId),
       'date': serializer.toJson<DateTime>(date),
-      'description': serializer.toJson<String>(description),
-      'isHoliday': serializer.toJson<bool>(isHoliday),
+      'status': serializer.toJson<String>(status),
     };
   }
 
-  CalendarEvent copyWith(
-          {int? id,
-          String? title,
-          DateTime? date,
-          String? description,
-          bool? isHoliday}) =>
-      CalendarEvent(
+  AttendanceRecord copyWith(
+          {int? id, int? subjectId, DateTime? date, String? status}) =>
+      AttendanceRecord(
         id: id ?? this.id,
-        title: title ?? this.title,
+        subjectId: subjectId ?? this.subjectId,
         date: date ?? this.date,
-        description: description ?? this.description,
-        isHoliday: isHoliday ?? this.isHoliday,
+        status: status ?? this.status,
       );
-  CalendarEvent copyWithCompanion(CalendarEventsCompanion data) {
-    return CalendarEvent(
+  AttendanceRecord copyWithCompanion(AttendanceRecordsCompanion data) {
+    return AttendanceRecord(
       id: data.id.present ? data.id.value : this.id,
-      title: data.title.present ? data.title.value : this.title,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
       date: data.date.present ? data.date.value : this.date,
-      description:
-          data.description.present ? data.description.value : this.description,
-      isHoliday: data.isHoliday.present ? data.isHoliday.value : this.isHoliday,
+      status: data.status.present ? data.status.value : this.status,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('CalendarEvent(')
+    return (StringBuffer('AttendanceRecord(')
           ..write('id: $id, ')
-          ..write('title: $title, ')
+          ..write('subjectId: $subjectId, ')
           ..write('date: $date, ')
-          ..write('description: $description, ')
-          ..write('isHoliday: $isHoliday')
+          ..write('status: $status')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, title, date, description, isHoliday);
+  int get hashCode => Object.hash(id, subjectId, date, status);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is CalendarEvent &&
+      (other is AttendanceRecord &&
           other.id == this.id &&
-          other.title == this.title &&
+          other.subjectId == this.subjectId &&
           other.date == this.date &&
-          other.description == this.description &&
-          other.isHoliday == this.isHoliday);
+          other.status == this.status);
 }
 
-class CalendarEventsCompanion extends UpdateCompanion<CalendarEvent> {
+class AttendanceRecordsCompanion extends UpdateCompanion<AttendanceRecord> {
   final Value<int> id;
-  final Value<String> title;
+  final Value<int> subjectId;
   final Value<DateTime> date;
-  final Value<String> description;
-  final Value<bool> isHoliday;
-  const CalendarEventsCompanion({
+  final Value<String> status;
+  const AttendanceRecordsCompanion({
     this.id = const Value.absent(),
-    this.title = const Value.absent(),
+    this.subjectId = const Value.absent(),
     this.date = const Value.absent(),
-    this.description = const Value.absent(),
-    this.isHoliday = const Value.absent(),
+    this.status = const Value.absent(),
   });
-  CalendarEventsCompanion.insert({
+  AttendanceRecordsCompanion.insert({
     this.id = const Value.absent(),
-    required String title,
+    required int subjectId,
     required DateTime date,
-    this.description = const Value.absent(),
-    this.isHoliday = const Value.absent(),
-  })  : title = Value(title),
+    this.status = const Value.absent(),
+  })  : subjectId = Value(subjectId),
         date = Value(date);
-  static Insertable<CalendarEvent> custom({
+  static Insertable<AttendanceRecord> custom({
     Expression<int>? id,
-    Expression<String>? title,
+    Expression<int>? subjectId,
     Expression<DateTime>? date,
-    Expression<String>? description,
-    Expression<bool>? isHoliday,
+    Expression<String>? status,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (title != null) 'title': title,
+      if (subjectId != null) 'subject_id': subjectId,
       if (date != null) 'date': date,
-      if (description != null) 'description': description,
-      if (isHoliday != null) 'is_holiday': isHoliday,
+      if (status != null) 'status': status,
     });
   }
 
-  CalendarEventsCompanion copyWith(
+  AttendanceRecordsCompanion copyWith(
       {Value<int>? id,
-      Value<String>? title,
+      Value<int>? subjectId,
       Value<DateTime>? date,
-      Value<String>? description,
-      Value<bool>? isHoliday}) {
-    return CalendarEventsCompanion(
+      Value<String>? status}) {
+    return AttendanceRecordsCompanion(
       id: id ?? this.id,
-      title: title ?? this.title,
+      subjectId: subjectId ?? this.subjectId,
       date: date ?? this.date,
-      description: description ?? this.description,
-      isHoliday: isHoliday ?? this.isHoliday,
+      status: status ?? this.status,
     );
   }
 
@@ -927,29 +992,25 @@ class CalendarEventsCompanion extends UpdateCompanion<CalendarEvent> {
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
-    if (title.present) {
-      map['title'] = Variable<String>(title.value);
+    if (subjectId.present) {
+      map['subject_id'] = Variable<int>(subjectId.value);
     }
     if (date.present) {
       map['date'] = Variable<DateTime>(date.value);
     }
-    if (description.present) {
-      map['description'] = Variable<String>(description.value);
-    }
-    if (isHoliday.present) {
-      map['is_holiday'] = Variable<bool>(isHoliday.value);
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
     }
     return map;
   }
 
   @override
   String toString() {
-    return (StringBuffer('CalendarEventsCompanion(')
+    return (StringBuffer('AttendanceRecordsCompanion(')
           ..write('id: $id, ')
-          ..write('title: $title, ')
+          ..write('subjectId: $subjectId, ')
           ..write('date: $date, ')
-          ..write('description: $description, ')
-          ..write('isHoliday: $isHoliday')
+          ..write('status: $status')
           ..write(')'))
         .toString();
   }
@@ -959,15 +1020,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $SubjectsTable subjects = $SubjectsTable(this);
-  late final $TimetableEntriesTable timetableEntries =
-      $TimetableEntriesTable(this);
-  late final $CalendarEventsTable calendarEvents = $CalendarEventsTable(this);
+  late final $WeeklyLectureSlotsTable weeklyLectureSlots =
+      $WeeklyLectureSlotsTable(this);
+  late final $AttendanceRecordsTable attendanceRecords =
+      $AttendanceRecordsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [subjects, timetableEntries, calendarEvents];
+      [subjects, weeklyLectureSlots, attendanceRecords];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
         [
@@ -975,7 +1037,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
             on: TableUpdateQuery.onTableName('subjects',
                 limitUpdateKind: UpdateKind.delete),
             result: [
-              TableUpdate('timetable_entries', kind: UpdateKind.delete),
+              TableUpdate('weekly_lecture_slots', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('subjects',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('attendance_records', kind: UpdateKind.delete),
             ],
           ),
         ],
@@ -985,15 +1054,19 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 typedef $$SubjectsTableCreateCompanionBuilder = SubjectsCompanion Function({
   Value<int> id,
   required String name,
-  Value<String> code,
-  Value<int?> colorValue,
+  Value<String?> code,
+  Value<String?> nickname,
+  Value<String?> facultyName,
+  required int accentColor,
   Value<DateTime> createdAt,
 });
 typedef $$SubjectsTableUpdateCompanionBuilder = SubjectsCompanion Function({
   Value<int> id,
   Value<String> name,
-  Value<String> code,
-  Value<int?> colorValue,
+  Value<String?> code,
+  Value<String?> nickname,
+  Value<String?> facultyName,
+  Value<int> accentColor,
   Value<DateTime> createdAt,
 });
 
@@ -1001,19 +1074,36 @@ final class $$SubjectsTableReferences
     extends BaseReferences<_$AppDatabase, $SubjectsTable, Subject> {
   $$SubjectsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static MultiTypedResultKey<$TimetableEntriesTable, List<TimetableEntry>>
-      _timetableEntriesRefsTable(_$AppDatabase db) =>
-          MultiTypedResultKey.fromTable(db.timetableEntries,
+  static MultiTypedResultKey<$WeeklyLectureSlotsTable, List<WeeklyLectureSlot>>
+      _weeklyLectureSlotsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.weeklyLectureSlots,
               aliasName: $_aliasNameGenerator(
-                  db.subjects.id, db.timetableEntries.subjectId));
+                  db.subjects.id, db.weeklyLectureSlots.subjectId));
 
-  $$TimetableEntriesTableProcessedTableManager get timetableEntriesRefs {
+  $$WeeklyLectureSlotsTableProcessedTableManager get weeklyLectureSlotsRefs {
     final manager =
-        $$TimetableEntriesTableTableManager($_db, $_db.timetableEntries)
+        $$WeeklyLectureSlotsTableTableManager($_db, $_db.weeklyLectureSlots)
             .filter((f) => f.subjectId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache =
-        $_typedResult.readTableOrNull(_timetableEntriesRefsTable($_db));
+        $_typedResult.readTableOrNull(_weeklyLectureSlotsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$AttendanceRecordsTable, List<AttendanceRecord>>
+      _attendanceRecordsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.attendanceRecords,
+              aliasName: $_aliasNameGenerator(
+                  db.subjects.id, db.attendanceRecords.subjectId));
+
+  $$AttendanceRecordsTableProcessedTableManager get attendanceRecordsRefs {
+    final manager =
+        $$AttendanceRecordsTableTableManager($_db, $_db.attendanceRecords)
+            .filter((f) => f.subjectId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_attendanceRecordsRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -1037,25 +1127,52 @@ class $$SubjectsTableFilterComposer
   ColumnFilters<String> get code => $composableBuilder(
       column: $table.code, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get colorValue => $composableBuilder(
-      column: $table.colorValue, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get nickname => $composableBuilder(
+      column: $table.nickname, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get facultyName => $composableBuilder(
+      column: $table.facultyName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get accentColor => $composableBuilder(
+      column: $table.accentColor, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
-  Expression<bool> timetableEntriesRefs(
-      Expression<bool> Function($$TimetableEntriesTableFilterComposer f) f) {
-    final $$TimetableEntriesTableFilterComposer composer = $composerBuilder(
+  Expression<bool> weeklyLectureSlotsRefs(
+      Expression<bool> Function($$WeeklyLectureSlotsTableFilterComposer f) f) {
+    final $$WeeklyLectureSlotsTableFilterComposer composer = $composerBuilder(
         composer: this,
         getCurrentColumn: (t) => t.id,
-        referencedTable: $db.timetableEntries,
+        referencedTable: $db.weeklyLectureSlots,
         getReferencedColumn: (t) => t.subjectId,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
-            $$TimetableEntriesTableFilterComposer(
+            $$WeeklyLectureSlotsTableFilterComposer(
               $db: $db,
-              $table: $db.timetableEntries,
+              $table: $db.weeklyLectureSlots,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> attendanceRecordsRefs(
+      Expression<bool> Function($$AttendanceRecordsTableFilterComposer f) f) {
+    final $$AttendanceRecordsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.attendanceRecords,
+        getReferencedColumn: (t) => t.subjectId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AttendanceRecordsTableFilterComposer(
+              $db: $db,
+              $table: $db.attendanceRecords,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -1083,8 +1200,14 @@ class $$SubjectsTableOrderingComposer
   ColumnOrderings<String> get code => $composableBuilder(
       column: $table.code, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get colorValue => $composableBuilder(
-      column: $table.colorValue, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get nickname => $composableBuilder(
+      column: $table.nickname, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get facultyName => $composableBuilder(
+      column: $table.facultyName, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get accentColor => $composableBuilder(
+      column: $table.accentColor, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
@@ -1108,30 +1231,59 @@ class $$SubjectsTableAnnotationComposer
   GeneratedColumn<String> get code =>
       $composableBuilder(column: $table.code, builder: (column) => column);
 
-  GeneratedColumn<int> get colorValue => $composableBuilder(
-      column: $table.colorValue, builder: (column) => column);
+  GeneratedColumn<String> get nickname =>
+      $composableBuilder(column: $table.nickname, builder: (column) => column);
+
+  GeneratedColumn<String> get facultyName => $composableBuilder(
+      column: $table.facultyName, builder: (column) => column);
+
+  GeneratedColumn<int> get accentColor => $composableBuilder(
+      column: $table.accentColor, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  Expression<T> timetableEntriesRefs<T extends Object>(
-      Expression<T> Function($$TimetableEntriesTableAnnotationComposer a) f) {
-    final $$TimetableEntriesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.timetableEntries,
-        getReferencedColumn: (t) => t.subjectId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$TimetableEntriesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.timetableEntries,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+  Expression<T> weeklyLectureSlotsRefs<T extends Object>(
+      Expression<T> Function($$WeeklyLectureSlotsTableAnnotationComposer a) f) {
+    final $$WeeklyLectureSlotsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.weeklyLectureSlots,
+            getReferencedColumn: (t) => t.subjectId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$WeeklyLectureSlotsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.weeklyLectureSlots,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> attendanceRecordsRefs<T extends Object>(
+      Expression<T> Function($$AttendanceRecordsTableAnnotationComposer a) f) {
+    final $$AttendanceRecordsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.attendanceRecords,
+            getReferencedColumn: (t) => t.subjectId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$AttendanceRecordsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.attendanceRecords,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
     return f(composer);
   }
 }
@@ -1147,7 +1299,8 @@ class $$SubjectsTableTableManager extends RootTableManager<
     $$SubjectsTableUpdateCompanionBuilder,
     (Subject, $$SubjectsTableReferences),
     Subject,
-    PrefetchHooks Function({bool timetableEntriesRefs})> {
+    PrefetchHooks Function(
+        {bool weeklyLectureSlotsRefs, bool attendanceRecordsRefs})> {
   $$SubjectsTableTableManager(_$AppDatabase db, $SubjectsTable table)
       : super(TableManagerState(
           db: db,
@@ -1161,53 +1314,76 @@ class $$SubjectsTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
             Value<String> name = const Value.absent(),
-            Value<String> code = const Value.absent(),
-            Value<int?> colorValue = const Value.absent(),
+            Value<String?> code = const Value.absent(),
+            Value<String?> nickname = const Value.absent(),
+            Value<String?> facultyName = const Value.absent(),
+            Value<int> accentColor = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
           }) =>
               SubjectsCompanion(
             id: id,
             name: name,
             code: code,
-            colorValue: colorValue,
+            nickname: nickname,
+            facultyName: facultyName,
+            accentColor: accentColor,
             createdAt: createdAt,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required String name,
-            Value<String> code = const Value.absent(),
-            Value<int?> colorValue = const Value.absent(),
+            Value<String?> code = const Value.absent(),
+            Value<String?> nickname = const Value.absent(),
+            Value<String?> facultyName = const Value.absent(),
+            required int accentColor,
             Value<DateTime> createdAt = const Value.absent(),
           }) =>
               SubjectsCompanion.insert(
             id: id,
             name: name,
             code: code,
-            colorValue: colorValue,
+            nickname: nickname,
+            facultyName: facultyName,
+            accentColor: accentColor,
             createdAt: createdAt,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) =>
                   (e.readTable(table), $$SubjectsTableReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({timetableEntriesRefs = false}) {
+          prefetchHooksCallback: (
+              {weeklyLectureSlotsRefs = false, attendanceRecordsRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
-                if (timetableEntriesRefs) db.timetableEntries
+                if (weeklyLectureSlotsRefs) db.weeklyLectureSlots,
+                if (attendanceRecordsRefs) db.attendanceRecords
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
-                  if (timetableEntriesRefs)
+                  if (weeklyLectureSlotsRefs)
                     await $_getPrefetchedData<Subject, $SubjectsTable,
-                            TimetableEntry>(
+                            WeeklyLectureSlot>(
                         currentTable: table,
                         referencedTable: $$SubjectsTableReferences
-                            ._timetableEntriesRefsTable(db),
+                            ._weeklyLectureSlotsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$SubjectsTableReferences(db, table, p0)
-                                .timetableEntriesRefs,
+                                .weeklyLectureSlotsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.subjectId == item.id),
+                        typedResults: items),
+                  if (attendanceRecordsRefs)
+                    await $_getPrefetchedData<Subject, $SubjectsTable,
+                            AttendanceRecord>(
+                        currentTable: table,
+                        referencedTable: $$SubjectsTableReferences
+                            ._attendanceRecordsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SubjectsTableReferences(db, table, p0)
+                                .attendanceRecordsRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.subjectId == item.id),
@@ -1230,9 +1406,10 @@ typedef $$SubjectsTableProcessedTableManager = ProcessedTableManager<
     $$SubjectsTableUpdateCompanionBuilder,
     (Subject, $$SubjectsTableReferences),
     Subject,
-    PrefetchHooks Function({bool timetableEntriesRefs})>;
-typedef $$TimetableEntriesTableCreateCompanionBuilder
-    = TimetableEntriesCompanion Function({
+    PrefetchHooks Function(
+        {bool weeklyLectureSlotsRefs, bool attendanceRecordsRefs})>;
+typedef $$WeeklyLectureSlotsTableCreateCompanionBuilder
+    = WeeklyLectureSlotsCompanion Function({
   Value<int> id,
   required int subjectId,
   required int dayOfWeek,
@@ -1240,8 +1417,8 @@ typedef $$TimetableEntriesTableCreateCompanionBuilder
   required int endMinutes,
   Value<String> room,
 });
-typedef $$TimetableEntriesTableUpdateCompanionBuilder
-    = TimetableEntriesCompanion Function({
+typedef $$WeeklyLectureSlotsTableUpdateCompanionBuilder
+    = WeeklyLectureSlotsCompanion Function({
   Value<int> id,
   Value<int> subjectId,
   Value<int> dayOfWeek,
@@ -1250,14 +1427,14 @@ typedef $$TimetableEntriesTableUpdateCompanionBuilder
   Value<String> room,
 });
 
-final class $$TimetableEntriesTableReferences extends BaseReferences<
-    _$AppDatabase, $TimetableEntriesTable, TimetableEntry> {
-  $$TimetableEntriesTableReferences(
+final class $$WeeklyLectureSlotsTableReferences extends BaseReferences<
+    _$AppDatabase, $WeeklyLectureSlotsTable, WeeklyLectureSlot> {
+  $$WeeklyLectureSlotsTableReferences(
       super.$_db, super.$_table, super.$_typedResult);
 
   static $SubjectsTable _subjectIdTable(_$AppDatabase db) =>
-      db.subjects.createAlias(
-          $_aliasNameGenerator(db.timetableEntries.subjectId, db.subjects.id));
+      db.subjects.createAlias($_aliasNameGenerator(
+          db.weeklyLectureSlots.subjectId, db.subjects.id));
 
   $$SubjectsTableProcessedTableManager get subjectId {
     final $_column = $_itemColumn<int>('subject_id')!;
@@ -1271,9 +1448,9 @@ final class $$TimetableEntriesTableReferences extends BaseReferences<
   }
 }
 
-class $$TimetableEntriesTableFilterComposer
-    extends Composer<_$AppDatabase, $TimetableEntriesTable> {
-  $$TimetableEntriesTableFilterComposer({
+class $$WeeklyLectureSlotsTableFilterComposer
+    extends Composer<_$AppDatabase, $WeeklyLectureSlotsTable> {
+  $$WeeklyLectureSlotsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1316,9 +1493,9 @@ class $$TimetableEntriesTableFilterComposer
   }
 }
 
-class $$TimetableEntriesTableOrderingComposer
-    extends Composer<_$AppDatabase, $TimetableEntriesTable> {
-  $$TimetableEntriesTableOrderingComposer({
+class $$WeeklyLectureSlotsTableOrderingComposer
+    extends Composer<_$AppDatabase, $WeeklyLectureSlotsTable> {
+  $$WeeklyLectureSlotsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1362,9 +1539,9 @@ class $$TimetableEntriesTableOrderingComposer
   }
 }
 
-class $$TimetableEntriesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $TimetableEntriesTable> {
-  $$TimetableEntriesTableAnnotationComposer({
+class $$WeeklyLectureSlotsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WeeklyLectureSlotsTable> {
+  $$WeeklyLectureSlotsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1407,29 +1584,30 @@ class $$TimetableEntriesTableAnnotationComposer
   }
 }
 
-class $$TimetableEntriesTableTableManager extends RootTableManager<
+class $$WeeklyLectureSlotsTableTableManager extends RootTableManager<
     _$AppDatabase,
-    $TimetableEntriesTable,
-    TimetableEntry,
-    $$TimetableEntriesTableFilterComposer,
-    $$TimetableEntriesTableOrderingComposer,
-    $$TimetableEntriesTableAnnotationComposer,
-    $$TimetableEntriesTableCreateCompanionBuilder,
-    $$TimetableEntriesTableUpdateCompanionBuilder,
-    (TimetableEntry, $$TimetableEntriesTableReferences),
-    TimetableEntry,
+    $WeeklyLectureSlotsTable,
+    WeeklyLectureSlot,
+    $$WeeklyLectureSlotsTableFilterComposer,
+    $$WeeklyLectureSlotsTableOrderingComposer,
+    $$WeeklyLectureSlotsTableAnnotationComposer,
+    $$WeeklyLectureSlotsTableCreateCompanionBuilder,
+    $$WeeklyLectureSlotsTableUpdateCompanionBuilder,
+    (WeeklyLectureSlot, $$WeeklyLectureSlotsTableReferences),
+    WeeklyLectureSlot,
     PrefetchHooks Function({bool subjectId})> {
-  $$TimetableEntriesTableTableManager(
-      _$AppDatabase db, $TimetableEntriesTable table)
+  $$WeeklyLectureSlotsTableTableManager(
+      _$AppDatabase db, $WeeklyLectureSlotsTable table)
       : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$TimetableEntriesTableFilterComposer($db: db, $table: table),
+              $$WeeklyLectureSlotsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$TimetableEntriesTableOrderingComposer($db: db, $table: table),
+              $$WeeklyLectureSlotsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$TimetableEntriesTableAnnotationComposer($db: db, $table: table),
+              $$WeeklyLectureSlotsTableAnnotationComposer(
+                  $db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
             Value<int> subjectId = const Value.absent(),
@@ -1438,7 +1616,7 @@ class $$TimetableEntriesTableTableManager extends RootTableManager<
             Value<int> endMinutes = const Value.absent(),
             Value<String> room = const Value.absent(),
           }) =>
-              TimetableEntriesCompanion(
+              WeeklyLectureSlotsCompanion(
             id: id,
             subjectId: subjectId,
             dayOfWeek: dayOfWeek,
@@ -1454,7 +1632,7 @@ class $$TimetableEntriesTableTableManager extends RootTableManager<
             required int endMinutes,
             Value<String> room = const Value.absent(),
           }) =>
-              TimetableEntriesCompanion.insert(
+              WeeklyLectureSlotsCompanion.insert(
             id: id,
             subjectId: subjectId,
             dayOfWeek: dayOfWeek,
@@ -1465,7 +1643,7 @@ class $$TimetableEntriesTableTableManager extends RootTableManager<
           withReferenceMapper: (p0) => p0
               .map((e) => (
                     e.readTable(table),
-                    $$TimetableEntriesTableReferences(db, table, e)
+                    $$WeeklyLectureSlotsTableReferences(db, table, e)
                   ))
               .toList(),
           prefetchHooksCallback: ({subjectId = false}) {
@@ -1490,8 +1668,8 @@ class $$TimetableEntriesTableTableManager extends RootTableManager<
                     currentTable: table,
                     currentColumn: table.subjectId,
                     referencedTable:
-                        $$TimetableEntriesTableReferences._subjectIdTable(db),
-                    referencedColumn: $$TimetableEntriesTableReferences
+                        $$WeeklyLectureSlotsTableReferences._subjectIdTable(db),
+                    referencedColumn: $$WeeklyLectureSlotsTableReferences
                         ._subjectIdTable(db)
                         .id,
                   ) as T;
@@ -1507,38 +1685,57 @@ class $$TimetableEntriesTableTableManager extends RootTableManager<
         ));
 }
 
-typedef $$TimetableEntriesTableProcessedTableManager = ProcessedTableManager<
+typedef $$WeeklyLectureSlotsTableProcessedTableManager = ProcessedTableManager<
     _$AppDatabase,
-    $TimetableEntriesTable,
-    TimetableEntry,
-    $$TimetableEntriesTableFilterComposer,
-    $$TimetableEntriesTableOrderingComposer,
-    $$TimetableEntriesTableAnnotationComposer,
-    $$TimetableEntriesTableCreateCompanionBuilder,
-    $$TimetableEntriesTableUpdateCompanionBuilder,
-    (TimetableEntry, $$TimetableEntriesTableReferences),
-    TimetableEntry,
+    $WeeklyLectureSlotsTable,
+    WeeklyLectureSlot,
+    $$WeeklyLectureSlotsTableFilterComposer,
+    $$WeeklyLectureSlotsTableOrderingComposer,
+    $$WeeklyLectureSlotsTableAnnotationComposer,
+    $$WeeklyLectureSlotsTableCreateCompanionBuilder,
+    $$WeeklyLectureSlotsTableUpdateCompanionBuilder,
+    (WeeklyLectureSlot, $$WeeklyLectureSlotsTableReferences),
+    WeeklyLectureSlot,
     PrefetchHooks Function({bool subjectId})>;
-typedef $$CalendarEventsTableCreateCompanionBuilder = CalendarEventsCompanion
-    Function({
+typedef $$AttendanceRecordsTableCreateCompanionBuilder
+    = AttendanceRecordsCompanion Function({
   Value<int> id,
-  required String title,
+  required int subjectId,
   required DateTime date,
-  Value<String> description,
-  Value<bool> isHoliday,
+  Value<String> status,
 });
-typedef $$CalendarEventsTableUpdateCompanionBuilder = CalendarEventsCompanion
-    Function({
+typedef $$AttendanceRecordsTableUpdateCompanionBuilder
+    = AttendanceRecordsCompanion Function({
   Value<int> id,
-  Value<String> title,
+  Value<int> subjectId,
   Value<DateTime> date,
-  Value<String> description,
-  Value<bool> isHoliday,
+  Value<String> status,
 });
 
-class $$CalendarEventsTableFilterComposer
-    extends Composer<_$AppDatabase, $CalendarEventsTable> {
-  $$CalendarEventsTableFilterComposer({
+final class $$AttendanceRecordsTableReferences extends BaseReferences<
+    _$AppDatabase, $AttendanceRecordsTable, AttendanceRecord> {
+  $$AttendanceRecordsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $SubjectsTable _subjectIdTable(_$AppDatabase db) =>
+      db.subjects.createAlias(
+          $_aliasNameGenerator(db.attendanceRecords.subjectId, db.subjects.id));
+
+  $$SubjectsTableProcessedTableManager get subjectId {
+    final $_column = $_itemColumn<int>('subject_id')!;
+
+    final manager = $$SubjectsTableTableManager($_db, $_db.subjects)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_subjectIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$AttendanceRecordsTableFilterComposer
+    extends Composer<_$AppDatabase, $AttendanceRecordsTable> {
+  $$AttendanceRecordsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1548,22 +1745,36 @@ class $$CalendarEventsTableFilterComposer
   ColumnFilters<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get title => $composableBuilder(
-      column: $table.title, builder: (column) => ColumnFilters(column));
-
   ColumnFilters<DateTime> get date => $composableBuilder(
       column: $table.date, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get isHoliday => $composableBuilder(
-      column: $table.isHoliday, builder: (column) => ColumnFilters(column));
+  $$SubjectsTableFilterComposer get subjectId {
+    final $$SubjectsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.subjectId,
+        referencedTable: $db.subjects,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SubjectsTableFilterComposer(
+              $db: $db,
+              $table: $db.subjects,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
-class $$CalendarEventsTableOrderingComposer
-    extends Composer<_$AppDatabase, $CalendarEventsTable> {
-  $$CalendarEventsTableOrderingComposer({
+class $$AttendanceRecordsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AttendanceRecordsTable> {
+  $$AttendanceRecordsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1573,22 +1784,36 @@ class $$CalendarEventsTableOrderingComposer
   ColumnOrderings<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get title => $composableBuilder(
-      column: $table.title, builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<DateTime> get date => $composableBuilder(
       column: $table.date, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get isHoliday => $composableBuilder(
-      column: $table.isHoliday, builder: (column) => ColumnOrderings(column));
+  $$SubjectsTableOrderingComposer get subjectId {
+    final $$SubjectsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.subjectId,
+        referencedTable: $db.subjects,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SubjectsTableOrderingComposer(
+              $db: $db,
+              $table: $db.subjects,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
-class $$CalendarEventsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $CalendarEventsTable> {
-  $$CalendarEventsTableAnnotationComposer({
+class $$AttendanceRecordsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AttendanceRecordsTable> {
+  $$AttendanceRecordsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1598,103 +1823,146 @@ class $$CalendarEventsTableAnnotationComposer
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get title =>
-      $composableBuilder(column: $table.title, builder: (column) => column);
-
   GeneratedColumn<DateTime> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
 
-  GeneratedColumn<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => column);
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
 
-  GeneratedColumn<bool> get isHoliday =>
-      $composableBuilder(column: $table.isHoliday, builder: (column) => column);
+  $$SubjectsTableAnnotationComposer get subjectId {
+    final $$SubjectsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.subjectId,
+        referencedTable: $db.subjects,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SubjectsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.subjects,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
-class $$CalendarEventsTableTableManager extends RootTableManager<
+class $$AttendanceRecordsTableTableManager extends RootTableManager<
     _$AppDatabase,
-    $CalendarEventsTable,
-    CalendarEvent,
-    $$CalendarEventsTableFilterComposer,
-    $$CalendarEventsTableOrderingComposer,
-    $$CalendarEventsTableAnnotationComposer,
-    $$CalendarEventsTableCreateCompanionBuilder,
-    $$CalendarEventsTableUpdateCompanionBuilder,
-    (
-      CalendarEvent,
-      BaseReferences<_$AppDatabase, $CalendarEventsTable, CalendarEvent>
-    ),
-    CalendarEvent,
-    PrefetchHooks Function()> {
-  $$CalendarEventsTableTableManager(
-      _$AppDatabase db, $CalendarEventsTable table)
+    $AttendanceRecordsTable,
+    AttendanceRecord,
+    $$AttendanceRecordsTableFilterComposer,
+    $$AttendanceRecordsTableOrderingComposer,
+    $$AttendanceRecordsTableAnnotationComposer,
+    $$AttendanceRecordsTableCreateCompanionBuilder,
+    $$AttendanceRecordsTableUpdateCompanionBuilder,
+    (AttendanceRecord, $$AttendanceRecordsTableReferences),
+    AttendanceRecord,
+    PrefetchHooks Function({bool subjectId})> {
+  $$AttendanceRecordsTableTableManager(
+      _$AppDatabase db, $AttendanceRecordsTable table)
       : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$CalendarEventsTableFilterComposer($db: db, $table: table),
+              $$AttendanceRecordsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$CalendarEventsTableOrderingComposer($db: db, $table: table),
+              $$AttendanceRecordsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$CalendarEventsTableAnnotationComposer($db: db, $table: table),
+              $$AttendanceRecordsTableAnnotationComposer(
+                  $db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            Value<String> title = const Value.absent(),
+            Value<int> subjectId = const Value.absent(),
             Value<DateTime> date = const Value.absent(),
-            Value<String> description = const Value.absent(),
-            Value<bool> isHoliday = const Value.absent(),
+            Value<String> status = const Value.absent(),
           }) =>
-              CalendarEventsCompanion(
+              AttendanceRecordsCompanion(
             id: id,
-            title: title,
+            subjectId: subjectId,
             date: date,
-            description: description,
-            isHoliday: isHoliday,
+            status: status,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            required String title,
+            required int subjectId,
             required DateTime date,
-            Value<String> description = const Value.absent(),
-            Value<bool> isHoliday = const Value.absent(),
+            Value<String> status = const Value.absent(),
           }) =>
-              CalendarEventsCompanion.insert(
+              AttendanceRecordsCompanion.insert(
             id: id,
-            title: title,
+            subjectId: subjectId,
             date: date,
-            description: description,
-            isHoliday: isHoliday,
+            status: status,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable(table),
+                    $$AttendanceRecordsTableReferences(db, table, e)
+                  ))
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({subjectId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (subjectId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.subjectId,
+                    referencedTable:
+                        $$AttendanceRecordsTableReferences._subjectIdTable(db),
+                    referencedColumn: $$AttendanceRecordsTableReferences
+                        ._subjectIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
         ));
 }
 
-typedef $$CalendarEventsTableProcessedTableManager = ProcessedTableManager<
+typedef $$AttendanceRecordsTableProcessedTableManager = ProcessedTableManager<
     _$AppDatabase,
-    $CalendarEventsTable,
-    CalendarEvent,
-    $$CalendarEventsTableFilterComposer,
-    $$CalendarEventsTableOrderingComposer,
-    $$CalendarEventsTableAnnotationComposer,
-    $$CalendarEventsTableCreateCompanionBuilder,
-    $$CalendarEventsTableUpdateCompanionBuilder,
-    (
-      CalendarEvent,
-      BaseReferences<_$AppDatabase, $CalendarEventsTable, CalendarEvent>
-    ),
-    CalendarEvent,
-    PrefetchHooks Function()>;
+    $AttendanceRecordsTable,
+    AttendanceRecord,
+    $$AttendanceRecordsTableFilterComposer,
+    $$AttendanceRecordsTableOrderingComposer,
+    $$AttendanceRecordsTableAnnotationComposer,
+    $$AttendanceRecordsTableCreateCompanionBuilder,
+    $$AttendanceRecordsTableUpdateCompanionBuilder,
+    (AttendanceRecord, $$AttendanceRecordsTableReferences),
+    AttendanceRecord,
+    PrefetchHooks Function({bool subjectId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
   $$SubjectsTableTableManager get subjects =>
       $$SubjectsTableTableManager(_db, _db.subjects);
-  $$TimetableEntriesTableTableManager get timetableEntries =>
-      $$TimetableEntriesTableTableManager(_db, _db.timetableEntries);
-  $$CalendarEventsTableTableManager get calendarEvents =>
-      $$CalendarEventsTableTableManager(_db, _db.calendarEvents);
+  $$WeeklyLectureSlotsTableTableManager get weeklyLectureSlots =>
+      $$WeeklyLectureSlotsTableTableManager(_db, _db.weeklyLectureSlots);
+  $$AttendanceRecordsTableTableManager get attendanceRecords =>
+      $$AttendanceRecordsTableTableManager(_db, _db.attendanceRecords);
 }

@@ -2,59 +2,160 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 part 'app_database.g.dart';
 
-/// Stores a single enrolled subject.
+/// ============================================================================
+/// Subjects
+/// ============================================================================
+///
+/// Stores one enrolled subject.
 class Subjects extends Table {
   IntColumn get id => integer().autoIncrement()();
-  TextColumn get name => text().withLength(min: 1, max: 100)();
+
+  /// Official subject name.
+  TextColumn get name =>
+      text().unique().withLength(min: 1, max: 100)();
+
+  /// Optional course code.
   TextColumn get code =>
-      text().withLength(min: 0, max: 20).withDefault(const Constant(''))();
-  IntColumn get colorValue => integer().nullable()();
-  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+      text().nullable().withLength(min: 1, max: 20)();
+
+  /// Optional nickname used in compact UI.
+  TextColumn get nickname =>
+      text().nullable().withLength(min: 1, max: 30)();
+
+  /// Faculty / professor name.
+  TextColumn get facultyName =>
+      text().nullable().withLength(min: 1, max: 100)();
+
+  /// Material color used throughout the application.
+  IntColumn get accentColor => integer()();
+
+  DateTimeColumn get createdAt =>
+      dateTime().withDefault(currentDateAndTime)();
 }
 
-/// Stores a single recurring timetable entry for a subject.
-class TimetableEntries extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  IntColumn get subjectId =>
-      integer().references(Subjects, #id, onDelete: KeyAction.cascade)();
-  IntColumn get dayOfWeek => integer()(); // 1 = Monday .. 7 = Sunday
-  IntColumn get startMinutes => integer()(); // minutes since midnight
-  IntColumn get endMinutes => integer()();
-  TextColumn get room => text().withDefault(const Constant(''))();
-}
-
-/// Stores a single calendar event, holiday, or exam date.
-class CalendarEvents extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get title => text().withLength(min: 1, max: 150)();
-  DateTimeColumn get date => dateTime()();
-  TextColumn get description => text().withDefault(const Constant(''))();
-  BoolColumn get isHoliday => boolean().withDefault(const Constant(false))();
-}
-
-/// The application's single offline Drift database.
+/// ============================================================================
+/// Weekly Lecture Slots
+/// ============================================================================
 ///
-/// Holds subjects, timetable entries, and calendar events. Opened
-/// once via [appDatabaseProvider] and shared across all features.
-@DriftDatabase(tables: [Subjects, TimetableEntries, CalendarEvents])
+/// Recurring lecture schedule.
+class WeeklyLectureSlots extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get subjectId => integer().references(
+        Subjects,
+        #id,
+        onDelete: KeyAction.cascade,
+      )();
+
+  /// Monday = 1 ... Sunday = 7
+  IntColumn get dayOfWeek => integer()();
+
+  /// Minutes since midnight.
+  IntColumn get startMinutes => integer()();
+
+  /// Minutes since midnight.
+  IntColumn get endMinutes => integer()();
+
+  TextColumn get room =>
+      text().withDefault(const Constant(''))();
+
+  @override
+  List<String> get customConstraints => [
+        'CHECK(day_of_week BETWEEN 1 AND 7)',
+        'CHECK(start_minutes < end_minutes)',
+      ];
+}
+
+/// ============================================================================
+/// Attendance Records
+/// ============================================================================
+///
+/// One attendance entry for one lecture occurrence.
+class AttendanceRecords extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get subjectId => integer().references(
+        Subjects,
+        #id,
+        onDelete: KeyAction.cascade,
+      )();
+
+  DateTimeColumn get date => dateTime()();
+
+  TextColumn get status => text().withDefault(
+        const Constant('present'),
+      )();
+
+  @override
+  List<String> get customConstraints => [
+        "CHECK(status IN ('present','absent','cancelled','holiday','rescheduled'))",
+      ];
+}
+
+/// ============================================================================
+/// Database
+/// ============================================================================
+@DriftDatabase(
+  tables: [
+    Subjects,
+    WeeklyLectureSlots,
+    AttendanceRecords,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
-  /// Used only by tests to inject an in-memory executor.
-  AppDatabase.forTesting(super .executor);
+  AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 4;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) async {
+          await m.createAll();
+        },
+        onUpgrade: (m, from, to) async {
+          if (kDebugMode) {
+            // Development only: freely reset schema while the app is
+            // under active development, since debug installs have no
+            // user data worth preserving.
+            await m.deleteTable('attendance_records');
+            await m.deleteTable('weekly_lecture_slots');
+            await m.deleteTable('subjects');
+
+            await m.createAll();
+            return;
+          }
+
+          // Release builds must never silently destroy user data.
+          // Add real, additive `StepByStep`/`m.addColumn` style
+          // migrations here as the schema evolves, one case per
+          // (from, to) version pair. Until those migrations exist,
+          // fail loudly rather than deleting the user's subjects,
+          // timetable, and attendance history.
+          throw UnimplementedError(
+            'No release migration defined from schema $from to $to. '
+            'Add a non-destructive migration step before shipping '
+            'this schema change.',
+          );
+        },
+      );
 
   static LazyDatabase _openConnection() {
     return LazyDatabase(() async {
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File(p.join(dir.path, 'lectra.sqlite'));
+      final directory = await getApplicationDocumentsDirectory();
+
+      final file = File(
+        p.join(directory.path, 'lectra.sqlite'),
+      );
+
       return NativeDatabase.createInBackground(file);
     });
   }
