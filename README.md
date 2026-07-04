@@ -1,8 +1,8 @@
-# 🎓 Lectra
+# Lectra
 
 Lectra is a Flutter app for managing your college/university timetable and tracking attendance — built with Material 3, offline-first local storage, and reminder notifications so you never miss a class.
 
-## ✨ Features
+## Features
 
 - **Dashboard / Today's Schedule** — A vertical timeline of today's classes as the home screen, with the current or upcoming class highlighted live. Switch to a traditional weekly timetable grid view without leaving the screen.
 - **Subjects** — Add and manage subjects with a name, course code, nickname, faculty name, and a custom accent color used consistently across the app.
@@ -12,7 +12,7 @@ Lectra is a Flutter app for managing your college/university timetable and track
 - **Dynamic Theming** — Material You dynamic color support on Android 12+, with light/dark mode controlled from Settings.
 - **Offline-First** — All data is stored locally on-device using a structured local database; no account or internet connection required.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -23,7 +23,7 @@ Lectra is a Flutter app for managing your college/university timetable and track
 | Notifications | [flutter_local_notifications](https://pub.dev/packages/flutter_local_notifications) + [timezone](https://pub.dev/packages/timezone) |
 | Theming | Material 3 with [dynamic_color](https://pub.dev/packages/dynamic_color) |
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 lib/
@@ -47,7 +47,7 @@ lib/
 └── main.dart             # Entry point
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -77,7 +77,7 @@ Or build an App Bundle for Play Store distribution:
 flutter build appbundle --release
 ```
 
-## 📝 Build Notes
+## Build Notes
 
 - This project targets **Java 17**. If your system's default JDK is older (e.g. 1.8), point Gradle to a JDK 17 installation via `android/gradle.properties`:
   ```properties
@@ -86,10 +86,3 @@ flutter build appbundle --release
 - `minifyEnabled` and `shrinkResources` are enabled in the release build type to reduce APK size via code and resource shrinking.
 - Custom adaptive launcher icons are generated with [flutter_launcher_icons](https://pub.dev/packages/flutter_launcher_icons); see `pubspec.yaml` for configuration.
 
-## 📄 License
-
-This project is currently unlicensed. Add a `LICENSE` file to specify how others may use this code.
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome. Feel free to check the [issues page](../../issues) if you'd like to contribute.
