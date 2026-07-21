@@ -1,0 +1,54 @@
+name: Release
+
+# Runs whenever a version tag like v0.2.0 is pushed.
+# UpdateService (lib/core/services/update_service.dart) reads this
+# repo's "latest" GitHub Release, so every tag pushed here should be
+# a real version bump matching pubspec.yaml.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # required to create the Release and upload the APK
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Regenerates lib/core/database/app_database.g.dart from
+      # app_database.dart (Drift codegen) before building, so the
+      # release build always matches the current schema.
+      - name: Run build_runner
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Create GitHub Release and attach APK
+        uses: softprops/action-gh-release@v2
+        with:
+          # Uses the pushed tag (e.g. v0.2.0) as the release tag/title.
+          files: build/app/outputs/flutter-apk/app-release.apk
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
