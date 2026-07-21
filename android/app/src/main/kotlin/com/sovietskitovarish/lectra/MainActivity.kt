@@ -1,4 +1,4 @@
-package com.example.lectra
+package com.sovietskitovarish.lectra
 
 import io.flutter.embedding.android.FlutterActivity
 
