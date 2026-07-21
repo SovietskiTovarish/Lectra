@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lectra/core/constants/app_constants.dart';
+import 'package:lectra/features/ads/banner_ad_widget.dart';
 import 'package:lectra/features/settings/controller.dart';
 
 /// Application settings and preferences.
@@ -32,6 +33,11 @@ class SettingsScreen extends ConsumerWidget {
             leading: Icon(Icons.info_outline),
             title: Text(AppConstants.appName),
             subtitle: Text('Track your classes, schedule, and attendance.'),
+          ),
+          const Divider(height: 1),
+          const Padding(
+            padding: EdgeInsets.only(top: 8, bottom: 4),
+            child: AppBannerAd(),
           ),
         ],
       ),

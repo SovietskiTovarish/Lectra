@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:lectra/app.dart';
+import 'package:lectra/features/ads/interstitial_ad_manager.dart';
 import 'package:lectra/features/notifications/notification_service.dart';
 
 /// Prepares the Flutter engine and launches [LectraApp].
@@ -16,9 +18,21 @@ Future<void> bootstrap() async {
   // loads.
   await NotificationService.instance.initialize();
 
+  // Initializes the Google Mobile Ads SDK. Must complete before any
+  // BannerAd/InterstitialAd is loaded elsewhere in the app.
+  await MobileAds.instance.initialize();
+  InterstitialAdManager.instance.preload();
+
   runApp(
     const ProviderScope(
       child: LectraApp(),
     ),
   );
+
+  // Runs after the first frame so it never delays app startup or
+  // competes with the initial UI paint. Frequency-capped internally
+  // (see InterstitialAdManager) so this does not show on every open.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    InterstitialAdManager.instance.maybeShowOnAppOpen();
+  });
 }

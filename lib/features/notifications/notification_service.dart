@@ -120,7 +120,7 @@ class NotificationService {
     );
 
     await _plugin.initialize(
-      const InitializationSettings(
+      settings: const InitializationSettings(
         android: androidSettings,
         iOS: iosSettings,
       ),
@@ -250,11 +250,11 @@ class NotificationService {
     );
 
     await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(fireAt, tz.local),
-      const NotificationDetails(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(fireAt, tz.local),
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,
           _channelName,
@@ -268,7 +268,6 @@ class NotificationService {
       payload: '${entry.subjectId}',
     );
   }
-
   /// Cancels only the [ClassReminderType.followUp] reminder for the
   /// given subject's occurrence(s) on [date] — called right after the
   /// user marks attendance so they don't get nagged about a class
@@ -292,7 +291,7 @@ class NotificationService {
         occurrenceDay: occurrenceDay,
         type: ClassReminderType.followUp,
       );
-      await _plugin.cancel(id);
+      await _plugin.cancel(id: id);
     }
   }
 
